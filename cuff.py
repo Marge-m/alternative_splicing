@@ -10,8 +10,9 @@ def cuff(fpkmlist):   # print lines with changes
     for line in k:
         l2.append(line.strip().split('\t'))
     for i in range(len(l2)):
-        if (float(l2[i][9]) >= 5 or float(l2[i][13]) >= 5) and l2[i][0] != 'tracking_id':
-            li.append([l2[i][3], l2[i][0], l2[i][9], l2[i][13]])
+        if l2[i][0] != 'tracking_id':
+            if (float(l2[i][9]) >= 5 or float(l2[i][13]) >= 5):
+                li.append([l2[i][3], l2[i][0], l2[i][9], l2[i][13]])
     return li
 
 

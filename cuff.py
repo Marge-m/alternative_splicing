@@ -9,7 +9,7 @@ def cuff(fpkmlist):   # print lines with changes
     li = []
     for line in k:
         l2.append(line.strip().split('\t'))
-    for i in range(len(l2)):
+    for i in range(1, len(l2)):
         if l2[i][0] != 'tracking_id':
             if (float(l2[i][9]) >= 5 or float(l2[i][13]) >= 5):
                 li.append([l2[i][3], l2[i][0], l2[i][9], l2[i][13]])
@@ -19,20 +19,23 @@ def cuff(fpkmlist):   # print lines with changes
 import numpy as np
 
 
-def change(fpkmlist, f2write):  # print out changes, which exceeds st dev
+def change(fpkmlist, f2write, genes_fpkm):  # print out changes, which exceeds st dev
     lis = cuff(fpkmlist)
     list_with_dev = np.array([])
     li = []
+    genes = []
+    gene = open(genes_fpkm)
+    for line in gene:
+        genes.append(line.strip().split('\t'))        
     r = open(f2write, 'w')
     for i in range(len(lis)):
-        k = 0
-        for n in range(len(lis)):
-            if lis[n][0] == lis[i][0]:
-                k += float(lis[n][2])
-        k2 = 0
-        for n in range(len(lis)):
-            if lis[n][0] == lis[i][0]:
-                k2 += float(lis[n][3])
+        for n in range(len(genes)):
+            if genes[n][0] == lis[i][0]:
+                k = float(genes[n][9])
+                break
+        for n in range(len(genes)):
+            if genes[n][0] == lis[i][0]:
+                k2 = float(genes[n][13])
         if k != 0 and k2 != 0:
             list_with_dev = np.append(list_with_dev, abs(float(lis[i][3])/k2 - float(lis[i][2])/k))
             li.append([lis[i][0], lis[i][1], float(lis[i][2])/k, float(lis[i][3])/k2, float(lis[i][3])/k2 - float(lis[i][2])/k])
@@ -52,5 +55,5 @@ def change(fpkmlist, f2write):  # print out changes, which exceeds st dev
             r.write(str(li[i][0]) + ' ' + str(li[i][1]) + ' ' + str(li[i][2]) + ' ' + '0' + ' ' + str(-float(li[i][2])) + '\n')
     r.close()
 
-change('isoforms.fpkm_tracking', 'filewithchanges.txt')
+change('isoforms.fpkm_tracking', 'filewithchanges.txt', 'genes.fpkm_tracking')
 

@@ -40,7 +40,7 @@ def borden(fname, filewithgenes, f2write):  # write borden
     r = open(f2write, 'w')
     for item in l:
         for item2 in l2:
-            if item2[11] == item[1] and item2[2] == 'exon':
+            if item2[15] == item[1] and item2[2] == 'exon':
                 k = item2[6]
                 chrom = item2[0]
                 item.append([item2[3], item2[4]])

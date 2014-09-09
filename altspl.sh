@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 samtools view -bS $1 | samtools sort - 1-sorted	#  first sam
 samtools view -bS $2 | samtools sort - 2-sorted	#  second sam
-cuffdiff $3 1-sorted.bam 2-sorted.bam			#  gtf
+cuffdiff $3 1-sorted.bam 2-sorted.bam -p 4		#  gtf
 /usr/bin/python cuff.py
 /usr/bin/python cuff2.py
 /usr/bin/python cuff3.py

@@ -1,4 +1,4 @@
-
+import numpy as np
 import warnings
 
 warnings.simplefilter("error")
@@ -14,10 +14,7 @@ def cuff(fpkmlist):   # print lines with changes
             if (float(l2[i][9]) >= 5 or float(l2[i][13]) >= 5):
                 li.append([l2[i][3], l2[i][0], l2[i][9], l2[i][13]])
     return li
-
-
-import numpy as np
-
+    
 
 def change(fpkmlist, f2write, genes_fpkm):  # print out changes, which exceeds st dev
     lis = cuff(fpkmlist)
@@ -26,7 +23,8 @@ def change(fpkmlist, f2write, genes_fpkm):  # print out changes, which exceeds s
     genes = []
     gene = open(genes_fpkm)
     for line in gene:
-        genes.append(line.strip().split('\t'))        
+        genes.append(line.strip().split('\t'))
+    gene.close()
     r = open(f2write, 'w')
     for i in range(len(lis)):
         for n in range(len(genes)):

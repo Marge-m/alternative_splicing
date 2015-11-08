@@ -1,4 +1,9 @@
-# coding: utf-8
+"""
+This script filter isoforms with initial/final FPKM >= 5.0 and then filter isoforms 
+which ratio 'isoform FPKM to gene FPKM' has changed by more than 0.5
+"""
+
+
 import pandas as pd
 
 

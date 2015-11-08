@@ -1,3 +1,10 @@
+
+"""
+ФАЙЛ НЕ ОТРЕДАКТИРОВАН
+"""
+
+
+
 def changes(fnamewithminus, fnamewithplus, filewithborden, filetowrite, filewithisoforms):
     f = open(fnamewithminus)
     f2 = open(fnamewithplus)

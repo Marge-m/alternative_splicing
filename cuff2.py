@@ -5,13 +5,11 @@ def onlyaltspl(changes): # choose only alternative splicing events from all chan
     iso_changes = pd.read_csv(changes, sep=' ')
     only_alt_spl = pd.DataFrame(columns=['gene_id', 'tracking_id', 'FPKM1', 'FPKM2', 'FPKM_change'])
     loc_count = 0
-    print iso_changes
     for iso1 in iso_changes.iterrows():
         for iso2 in iso_changes.iterrows():
             if iso1[1]['gene_id'] == iso2[1]['gene_id'] and iso1[1]['tracking_id'] != iso2[1]['tracking_id']:
                 only_alt_spl.loc[loc_count] = iso1[1]
                 loc_count += 1
-    print only_alt_spl
     return only_alt_spl
 
 

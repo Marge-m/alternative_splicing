@@ -14,13 +14,13 @@ def forbed(filewithall, filewithminus, filewithplus):
     for change in changes:
         if float(change[5]) < 0:
             for i in range(6, len(change)-1, 2):
-                minus_changes.loc[loc_count] = [change[0], change[i], change[i+1], change[1]]
+                minus_changes.loc[minus_start] = [change[0], change[i], change[i+1], change[1]]
+                minus_start += 1
         else:
             for i in range(6, len(change)-1, 2):
-                plus_changes.loc[loc_count] = [change[0], change[i], change[i+1], change[1]]
+                plus_changes.loc[plus_start] = [change[0], change[i], change[i+1], change[1]]
+                plus_start += 1
     minus_changes.to_csv(filewithminus, sep=' ')
     plus_changes.to_csv(filewithplus, sep=' ')
 
 forbed('filewithborden.txt', 'minus_changes.txt', 'plus_changes.txt')
-
-

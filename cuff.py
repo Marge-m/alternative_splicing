@@ -1,57 +1,39 @@
-import numpy as np
-import warnings
+# coding: utf-8
+import pandas as pd
 
-warnings.simplefilter("error")
 
-def cuff(fpkmlist):   # print lines with changes
-    k = open(fpkmlist)
-    l2 = []
-    li = []
-    for line in k:
-        l2.append(line.strip().split('\t'))
-    for i in range(1, len(l2)):
-        if l2[i][0] != 'tracking_id':
-            if (float(l2[i][9]) >= 5 or float(l2[i][13]) >= 5):
-                li.append([l2[i][3], l2[i][0], l2[i][9], l2[i][13]])
-    return li
-    
+def filter_isoforms(fpkmlist):
+    ai = pd.read_csv(fpkmlist, sep='\t') # ai = all isoforms
+    return ai[(ai.q1_FPKM >= 5) | (ai.q2_FPKM >= 5)].loc[:, ['gene_id', 'tracking_id', 'q1_FPKM', 'q2_FPKM']]
+    # return isoforms with initial or final FPKM >= 5
 
-def change(fpkmlist, f2write, genes_fpkm):  # print out changes, which exceeds st dev
-    lis = cuff(fpkmlist)
-    list_with_dev = np.array([])
-    li = []
-    genes = []
-    gene = open(genes_fpkm)
-    for line in gene:
-        genes.append(line.strip().split('\t'))
-    gene.close()
-    r = open(f2write, 'w')
-    for i in range(len(lis)):
-        for n in range(len(genes)):
-            if genes[n][0] == lis[i][0]:
-                k = float(genes[n][9])
+
+def changes(fpkmlist, f2write, genes_fpkm):  # print out isoforms with changes, which exceed 0.5 (change in isoform FPKM to gene FPKM ratio)
+    filtered = filter_isoforms(fpkmlist)
+    genes = pd.read_csv(genes_fpkm, sep='\t') # fpkm for genes
+    iso_exc_stdev = pd.DataFrame(columns=['gene_id', 'tracking_id', 'FPKM1', 'FPKM2', 'FPKM_change'])
+    loc_count = 0
+    for isoform in filtered.iterrows():
+        for gene in genes.iterrows():
+            if gene[1]['tracking_id'] == isoform[1]['gene_id']:
+                gene_fpkm_init = gene[1]['q1_FPKM']
+                gene_fpkm_final = gene[1]['q2_FPKM']
                 break
-        for n in range(len(genes)):
-            if genes[n][0] == lis[i][0]:
-                k2 = float(genes[n][13])
-        if k != 0 and k2 != 0:
-            list_with_dev = np.append(list_with_dev, abs(float(lis[i][3])/k2 - float(lis[i][2])/k))
-            li.append([lis[i][0], lis[i][1], float(lis[i][2])/k, float(lis[i][3])/k2, float(lis[i][3])/k2 - float(lis[i][2])/k])
-        elif k == 0 and k2 != 0:
-            list_with_dev = np.append(list_with_dev, float(lis[i][3])/k2)
-            li.append([lis[i][0], lis[i][1], 0, float(lis[i][3])/k2, float(lis[i][3])/k2])
-        elif k != 0 and k2 == 0:
-            list_with_dev = np.append(list_with_dev, float(lis[i][2])/k)
-            li.append([lis[i][0], lis[i][1], float(lis[i][2])/k, 0, -float(lis[i][2])/k])
-    stdev = np.std(list_with_dev)
-    for i in range(len(li)):
-        if li[i][2] != 0 and li[i][3] != 0 and abs(li[i][4]) > stdev:
-            r.write(str(li[i][0]) + ' ' + str(li[i][1]) + ' ' + str(float(li[i][2])) + ' ' + str(float(li[i][3])) + ' ' + str(float(li[i][4])) + '\n')
-        elif li[i][2] == 0 and li[i][3] != 0 and abs(li[i][4]) > stdev:
-            r.write(str(li[i][0]) + ' ' + str(li[i][1]) + ' ' + '0' + ' ' + str(li[i][3]) + ' ' + str(float(li[i][3])) + '\n')
-        elif k != 0 and k2 == 0 and abs(li[i][4]) > stdev:
-            r.write(str(li[i][0]) + ' ' + str(li[i][1]) + ' ' + str(li[i][2]) + ' ' + '0' + ' ' + str(-float(li[i][2])) + '\n')
-    r.close()
+        if gene_fpkm_init != 0 and gene_fpkm_final != 0: #count standard deviation of changes in isoform's fpkm percentage in their genes fpkm
+            if abs((isoform[1]['q2_FPKM']/gene_fpkm_final - isoform[1]['q1_FPKM']/gene_fpkm_init)) > 0.5:
+                iso_exc_stdev.loc[loc_count] = [isoform[1]['gene_id'], isoform[1]['tracking_id'], isoform[1]['q1_FPKM']/gene_fpkm_init, isoform[1]['q2_FPKM']/gene_fpkm_final, isoform[1]['q2_FPKM']/gene_fpkm_final - isoform[1]['q1_FPKM']/gene_fpkm_init]
+                loc_count += 1
+        if gene_fpkm_init == 0:
+            if isoform[1]['q2_FPKM']/gene_fpkm_final > 0.5:
+                iso_exc_stdev.loc[loc_count] = [isoform[1]['gene_id'], isoform[1]['tracking_id'], 0, isoform[1]['q2_FPKM']/gene_fpkm_final, isoform[1]['q2_FPKM']/gene_fpkm_final]
+                loc_count += 1
+        if gene_fpkm_final == 0:
+            if isoform[1]['q1_FPKM']/gene_fpkm_init > 0.5:
+                iso_exc_stdev.loc[loc_count] = [isoform[1]['gene_id'], isoform[1]['tracking_id'], isoform[1]['q1_FPKM']/gene_fpkm_init, 0, - isoform[1]['q1_FPKM']/gene_fpkm_init]
+                loc_count += 1
+    iso_exc_stdev.to_csv(f2write, sep='\t')
 
-change('isoforms.fpkm_tracking', 'filewithchanges.txt', 'genes.fpkm_tracking')
+
+changes('isoforms.fpkm_tracking', 'filewithchanges.txt', 'genes.fpkm_tracking')
+
 
